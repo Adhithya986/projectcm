@@ -1,0 +1,288 @@
+Gauss Seidel Method
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Coefficient matrix and constants
+A = np.array([[8, -3, 2],
+              [4, 11, -1],
+              [6, 3, 12]], dtype=float)
+
+B = np.array([20, 33, 36], dtype=float)
+
+# Initial guess
+x = np.zeros(3)
+n = 10
+
+iterations = []
+x1_values = []
+x2_values = []
+x3_values = []
+
+print("-" * 60)
+print(f"{'k':<10}{'x[0]':<15}{'x[1]':<15}{'x[2]':<15}")
+print("-" * 60)
+
+# Gauss-Seidel iterations
+for k in range(1, n + 1):
+    x[0] = (B[0] - A[0, 1]*x[1] - A[0, 2]*x[2]) / A[0, 0]
+
+    x[1] = (B[1] - A[1, 0]*x[0] - A[1, 2]*x[2]) / A[1, 1]
+
+    x[2] = (B[2] - A[2, 0]*x[0] - A[2, 1]*x[1]) / A[2, 2]
+
+    iterations.append(k)
+    x1_values.append(x[0])
+    x2_values.append(x[1])
+    x3_values.append(x[2])
+
+    print(f"{k:<10}{x[0]:<15.6f}{x[1]:<15.6f}{x[2]:<15.6f}")
+
+print("-" * 60)
+print("Gauss-Seidel Solution:")
+print(x)
+
+# Visualization
+plt.figure(figsize=(8, 5))
+plt.plot(iterations, x1_values, marker='o', label='x1')
+plt.plot(iterations, x2_values, marker='s', label='x2')
+plt.plot(iterations, x3_values, marker='^', label='x3')
+
+plt.xlabel("Iteration")
+plt.ylabel("Solution values")
+plt.title("Convergence of Gauss-Seidel Method")
+plt.xticks(iterations)
+plt.grid(True)
+plt.legend()
+plt.show()
+
+
+Exact
+
+
+import sympy as sp
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define variables
+x, y = sp.symbols('x y')
+
+# Define M and N
+M = 2*x*y + 3*x**2
+N = x**2 + 4*y
+
+print("M dx + N dy = 0")
+print("M =", M)
+print("N =", N)
+
+# Check exactness
+My = sp.diff(M, y)
+Nx = sp.diff(N, x)
+
+print("dM/dy =", My)
+print("dN/dx =", Nx)
+
+if sp.simplify(My - Nx) == 0:
+    print("The differential equation is EXACT.")
+
+    # Integrate M with respect to x
+    F = sp.integrate(M, x)
+
+    # Find the remaining function of y
+    fy = sp.simplify(N - sp.diff(F, y))
+    f = sp.integrate(fy, y)
+
+    # General solution
+    F = sp.simplify(F + f)
+
+    print("Solution:")
+    print(F, "= C")
+
+    # Visualization
+    F_func = sp.lambdify((x, y), F, 'numpy')
+
+    x_vals = np.linspace(-2, 2, 200)
+    y_vals = np.linspace(-2, 2, 200)
+    X, Y = np.meshgrid(x_vals, y_vals)
+    Z = F_func(X, Y)
+
+    C_values = [-3, -2, -1, 0, 1, 2, 3]
+
+    contours = plt.contour(X, Y, Z, levels=C_values)
+    plt.clabel(contours, inline=True, fontsize=10)
+
+    plt.axhline(0, color='red')
+    plt.axvline(0, color='blue')
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.title("Solution Curves of Exact Differential Equation")
+    plt.grid(True)
+    plt.show()
+
+else:
+    print("The differential equation is NON-EXACT.")
+
+
+Newtons law of cooling
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+def cooling_constant(Ta, T0, t1, T1):
+    k = -(1 / t1) * np.log((T1 - Ta) / (T0 - Ta))
+    return k
+
+def find_temperature(Ta, T0, k, t):
+    T = Ta + (T0 - Ta) * np.exp(-k * t)
+    return T
+
+def find_time(Ta, T0, k, T):
+    t = -(1 / k) * np.log((T - Ta) / (T0 - Ta))
+    return t
+
+# Input values
+Ta = float(input("Enter surrounding temperature Ta = "))
+T0 = float(input("Enter initial temperature T0 = "))
+t1 = float(input("Enter known time t1 = "))
+T1 = float(input("Enter temperature at t1 = "))
+
+# Calculate cooling constant
+k = cooling_constant(Ta, T0, t1, T1)
+print("Cooling constant k =", k)
+
+# Find T2 or t2
+print("\nFor T2 and t2:")
+print("1. Find T2 for a given t2")
+print("2. Find t2 for a given T2")
+print("3. Skip T2 and t2")
+
+choice2 = int(input("Enter your choice = "))
+t2 = None
+T2 = None
+
+if choice2 == 1:
+    t2 = float(input("Enter time t2 = "))
+    T2 = find_temperature(Ta, T0, k, t2)
+    print("Time t2 =", t2)
+    print("Temperature T2 =", T2)
+
+elif choice2 == 2:
+    T2 = float(input("Enter required temperature T2 = "))
+    t2 = find_time(Ta, T0, k, T2)
+    print("Temperature T2 =", T2)
+    print("Time t2 =", t2)
+
+elif choice2 == 3:
+    print("T2 and t2 calculation skipped.")
+
+else:
+    print("Invalid choice")
+
+# Find T3 or t3
+print("\nFor T3 and t3:")
+print("1. Find T3 for a given t3")
+print("2. Find t3 for a given T3")
+print("3. Skip T3 and t3")
+
+choice3 = int(input("Enter your choice = "))
+t3 = None
+T3 = None
+
+if choice3 == 1:
+    t3 = float(input("Enter time t3 = "))
+    T3 = find_temperature(Ta, T0, k, t3)
+    print("Time t3 =", t3)
+    print("Temperature T3 =", T3)
+
+elif choice3 == 2:
+    T3 = float(input("Enter required temperature T3 = "))
+    t3 = find_time(Ta, T0, k, T3)
+    print("Temperature T3 =", T3)
+    print("Time t3 =", t3)
+
+elif choice3 == 3:
+    print("T3 and t3 calculation skipped.")
+
+else:
+    print("Invalid choice")
+
+# Visualization
+if choice2 in (1, 2) or choice3 in (1, 2):
+    times = [0, t1]
+    temperatures = [T0, T1]
+
+    if t2 is not None and T2 is not None:
+        times.append(t2)
+        temperatures.append(T2)
+
+    if t3 is not None and T3 is not None:
+        times.append(t3)
+        temperatures.append(T3)
+
+    t_max = max(times)
+    t = np.linspace(0, t_max, 100)
+    T = Ta + (T0 - Ta) * np.exp(-k * t)
+
+    plt.plot(t, T, label="Cooling curve")
+    plt.axhline(Ta, linestyle="--", label="Surrounding temperature")
+    plt.scatter(times, temperatures, label="Temperature points")
+
+    plt.xlabel("Time")
+    plt.ylabel("Temperature")
+    plt.title("Newton's Law of Cooling")
+    plt.grid(True)
+    plt.legend()
+    plt.show()
+
+
+Non-Homogeneous
+
+
+from sympy import *
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define variables
+x = symbols('x')
+y = Function('y')
+
+ode = Eq(
+    diff(y(x), x, 2) + 5*diff(y(x), x) + 6*y(x),
+    exp(x)
+)
+
+
+solution = dsolve(ode)
+
+print("Solution of the differential equation:")
+print(solution)
+
+
+CF = exp(-2*x) + exp(-3*x)
+
+
+PI = exp(x) / 12
+
+#  C1 = C2 = 1
+Y = CF + PI
+
+
+X = np.linspace(0, 10, 100)
+
+CF_value = lambdify(x, CF, 'numpy')(X)
+PI_value = lambdify(x, PI, 'numpy')(X)
+Y_value = lambdify(x, Y, 'numpy')(X)
+
+#visulization
+plt.plot(X, CF_value, label='CF')
+plt.plot(X, PI_value, label='PI')
+plt.plot(X, Y_value, label='General Solution (C1=C2=1)')
+
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title('Visualization of CF and PI')
+plt.grid(True)
+plt.legend()
+plt.show()

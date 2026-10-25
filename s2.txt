@@ -1,0 +1,276 @@
+Gauss Seidel Method
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Coefficient matrix and constants
+A = np.array([[8, -3, 2],
+              [4, 11, -1],
+              [6, 3, 12]], dtype=float)
+
+B = np.array([20, 33, 36], dtype=float)
+
+# Initial guess
+x = np.zeros(3)
+n = 10
+
+iterations = []
+x1_values = []
+x2_values = []
+x3_values = []
+
+print("-" * 60)
+print(f"{'k':<10}{'x[0]':<15}{'x[1]':<15}{'x[2]':<15}")
+print("-" * 60)
+
+# Gauss-Seidel iterations
+for k in range(1, n + 1):
+    x[0] = (B[0] - A[0, 1]*x[1] - A[0, 2]*x[2]) / A[0, 0]
+
+    x[1] = (B[1] - A[1, 0]*x[0] - A[1, 2]*x[2]) / A[1, 1]
+
+    x[2] = (B[2] - A[2, 0]*x[0] - A[2, 1]*x[1]) / A[2, 2]
+
+    iterations.append(k)
+    x1_values.append(x[0])
+    x2_values.append(x[1])
+    x3_values.append(x[2])
+
+    print(f"{k:<10}{x[0]:<15.6f}{x[1]:<15.6f}{x[2]:<15.6f}")
+
+print("-" * 60)
+print("Gauss-Seidel Solution:")
+print(x)
+
+# Visualization
+plt.figure(figsize=(8, 5))
+plt.plot(iterations, x1_values, marker='o', label='x1')
+plt.plot(iterations, x2_values, marker='s', label='x2')
+plt.plot(iterations, x3_values, marker='^', label='x3')
+
+plt.xlabel("Iteration")
+plt.ylabel("Solution values")
+plt.title("Convergence of Gauss-Seidel Method")
+plt.xticks(iterations)
+plt.grid(True)
+plt.legend()
+plt.show()
+
+
+Non-Exact
+
+
+import sympy as sp
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define symbols
+x, y = sp.symbols('x y')
+
+# Given differential equation: M dx + N dy = 0
+M = y**4 + 2*y
+N = x*y**3 + 2*y**4 - 4*x
+
+# Calculate partial derivatives
+My = sp.diff(M, y)
+Nx = sp.diff(N, x)
+
+print("M =", M)
+print("N =", N)
+print("dM/dy =", My)
+print("dN/dx =", Nx)
+
+if sp.simplify(My - Nx) == 0:
+    print("\nThe differential equation is EXACT.")
+    IF = 1
+
+else:
+    print("\nThe differential equation is NOT EXACT.")
+
+    # Calculate integrating factor
+    IF = sp.simplify(
+        sp.exp(sp.integrate((Nx - My)/M, y))
+    )
+
+    print("Integrating Factor =", IF)
+
+# Apply integrating factor
+M1 = sp.simplify(IF * M)
+N1 = sp.simplify(IF * N)
+
+# Find the potential function
+F = sp.integrate(M1, x)
+g_prime = sp.simplify(N1 - sp.diff(F, y))
+g = sp.integrate(g_prime, y)
+
+F = sp.simplify(F + g)
+
+print("\nSolution:")
+print(F, "= C")
+
+# Visualization of solution curves
+F_func = sp.lambdify((x, y), F, 'numpy')
+
+x_vals = np.linspace(-2, 2, 200)
+
+# Avoid y = 0 because the integrating factor is undefined there
+y_vals = np.concatenate((
+    np.linspace(-2, -0.05, 150),
+    np.linspace(0.05, 2, 150)
+))
+
+X, Y = np.meshgrid(x_vals, y_vals)
+Z = F_func(X, Y)
+Z = np.ma.masked_invalid(Z)
+
+C_values = [-3, -2, -1, 0, 1, 2, 3]
+
+plt.figure(figsize=(8, 6))
+contours = plt.contour(X, Y, Z, levels=C_values)
+plt.clabel(contours, inline=True, fontsize=9)
+
+plt.axhline(0, color='red', linewidth=0.8)
+plt.axvline(0, color='blue', linewidth=0.8)
+
+plt.xlabel("x")
+plt.ylabel("y")
+plt.title("Solution Curves of the Differential Equation")
+plt.grid(True)
+plt.show()
+
+
+Newtons law of growth
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Calculate growth/decay constant
+def find_constant(P0, t1, P1):
+    k = (1 / t1) * np.log(P1 / P0)
+    return k
+
+# Calculate quantity at a given time
+def find_quantity(P0, k, t):
+    P = P0 * np.exp(k * t)
+    return P
+
+# Calculate time for a given quantity
+def find_time(P0, k, P):
+    t = (1 / k) * np.log(P / P0)
+    return t
+
+# Input data
+P0 = float(input("Enter initial quantity P0 = "))
+t1 = float(input("Enter known time t1 = "))
+P1 = float(input("Enter quantity at t1 = "))
+
+# Calculate constant
+k = find_constant(P0, t1, P1)
+print("Growth/Decay constant k =", k)
+
+# Check growth or decay
+if k > 0:
+    print("The quantity represents Natural Growth.")
+elif k < 0:
+    print("The quantity represents Natural Decay.")
+else:
+    print("The quantity remains constant.")
+
+# Find P2 or t2
+print("\nFor P2 and t2:")
+print("1. Find P2 for a given t2")
+print("2. Find t2 for a given P2")
+print("3. Skip P2 and t2")
+
+choice = int(input("Enter your choice = "))
+
+P2 = None
+t2 = None
+
+if choice == 1:
+    t2 = float(input("Enter time t2 = "))
+    P2 = find_quantity(P0, k, t2)
+    print("Time t2 =", t2)
+    print("Quantity P2 =", P2)
+
+elif choice == 2:
+    P2 = float(input("Enter required quantity P2 = "))
+    if k == 0:
+        print("Time cannot be calculated when k = 0.")
+    else:
+        t2 = find_time(P0, k, P2)
+        print("Quantity P2 =", P2)
+        print("Time t2 =", t2)
+
+elif choice == 3:
+    print("P2 and t2 calculation skipped.")
+
+else:
+    print("Invalid choice")
+
+# Visualization
+if choice in (1, 2) and t2 is not None:
+    t = np.linspace(0, max(t1, t2) + 1, 100)
+    P = P0 * np.exp(k * t)
+
+    plt.plot(t, P, label="Growth/Decay curve")
+    plt.scatter([0, t1], [P0, P1], label="Known points")
+
+    if P2 is not None:
+        plt.scatter([t2], [P2], label="Calculated point")
+
+    plt.xlabel("Time")
+    plt.ylabel("Quantity")
+    plt.title("Law of Natural Growth and Decay")
+    plt.grid(True)
+    plt.legend()
+    plt.show()
+
+
+
+Homogeneous
+
+
+from sympy import *
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define variable and function
+x = symbols('x')
+y = Function('y')
+
+# Define the differential equation
+ode = Eq(
+    diff(y(x), x, 3)
+    - 6*diff(y(x), x, 2)
+    + 11*diff(y(x), x)
+    - 6*y(x),
+    0
+)
+
+# Solve the differential equation
+sol = dsolve(ode)
+
+print("Solution of the differential equation:")
+print(sol)
+
+# Visualization for C1 = C2 = C3 = 1
+y1 = (1 + exp(x) + exp(2*x)) * exp(x)
+
+# Convert symbolic expression to numerical function
+f = lambdify(x, y1, 'numpy')
+
+# Generate values
+X = np.linspace(0, 5, 200)
+Y = f(X)
+
+# Plot the solution
+plt.plot(X, Y, label='C1 = C2 = C3 = 1')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title('Visualization of Complementary Function')
+plt.grid(True)
+plt.legend()
+plt.show()
